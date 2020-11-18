@@ -79,7 +79,7 @@ Requires:       qubes-core-qrexec-dom0 >= 4.1.8
 Requires:       qubes-db-dom0
 # TODO: R: qubes-gui-dom0 >= 2.1.11
 Conflicts:      qubes-gui-dom0 < 1.1.13
-%if x%{?backend_vmm} == xxen
+%if "x%{?backend_vmm}" == "xxen"
 Requires:       xen-runtime
 Requires:       xen-hvm
 Requires:       xen-hvm-stubdom-linux >= 1.0.13
@@ -391,6 +391,7 @@ done
 %dir %{python3_sitelib}/qubes/vm/mix/__pycache__
 %{python3_sitelib}/qubes/vm/mix/__pycache__/*
 %{python3_sitelib}/qubes/vm/mix/__init__.py
+%{python3_sitelib}/qubes/vm/mix/dvmtemplate.py
 %{python3_sitelib}/qubes/vm/mix/net.py
 
 %dir %{python3_sitelib}/qubes/storage
@@ -416,6 +417,7 @@ done
 %{python3_sitelib}/qubes/ext/__pycache__/*
 %{python3_sitelib}/qubes/ext/__init__.py
 %{python3_sitelib}/qubes/ext/admin.py
+%{python3_sitelib}/qubes/ext/backup_restore.py
 %{python3_sitelib}/qubes/ext/block.py
 %{python3_sitelib}/qubes/ext/core_features.py
 %{python3_sitelib}/qubes/ext/gui.py
@@ -423,6 +425,7 @@ done
 %{python3_sitelib}/qubes/ext/pci.py
 %{python3_sitelib}/qubes/ext/r3compatibility.py
 %{python3_sitelib}/qubes/ext/services.py
+%{python3_sitelib}/qubes/ext/supported_features.py
 %{python3_sitelib}/qubes/ext/windows.py
 
 %dir %{python3_sitelib}/qubes/tests
@@ -478,6 +481,7 @@ done
 %{python3_sitelib}/qubes/tests/integ/__init__.py
 %{python3_sitelib}/qubes/tests/integ/backup.py
 %{python3_sitelib}/qubes/tests/integ/backupcompatibility.py
+%{python3_sitelib}/qubes/tests/integ/backupdispvm.py
 %{python3_sitelib}/qubes/tests/integ/basic.py
 %{python3_sitelib}/qubes/tests/integ/devices_block.py
 %{python3_sitelib}/qubes/tests/integ/devices_pci.py
@@ -529,6 +533,7 @@ done
 /etc/xen/scripts/block-snapshot
 /etc/xen/scripts/block-origin
 /etc/xen/scripts/vif-route-qubes
+%attr(0664,root,qubes) %config(noreplace) /etc/qubes/policy.d/85-admin-backup-restore.policy
 %attr(0664,root,qubes) %config(noreplace) /etc/qubes/policy.d/90-admin-default.policy
 %attr(0664,root,qubes) %config(noreplace) /etc/qubes/policy.d/90-default.policy
 %attr(0664,root,qubes) %config(noreplace) /etc/qubes/policy.d/include/admin-global-ro

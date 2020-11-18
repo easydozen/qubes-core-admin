@@ -19,10 +19,12 @@
 #
 
 import qubes.events
+import qubes.vm.mix.dvmtemplate
 import qubes.vm.qubesvm
 import qubes.config
 
-class StandaloneVM(qubes.vm.qubesvm.QubesVM):
+class StandaloneVM(qubes.vm.mix.dvmtemplate.DVMTemplateMixin,
+        qubes.vm.qubesvm.QubesVM):
     '''Standalone Application VM'''
 
     def __init__(self, *args, **kwargs):
@@ -57,4 +59,4 @@ class StandaloneVM(qubes.vm.qubesvm.QubesVM):
                 'rw': False,
             }
         }
-        super(StandaloneVM, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)

@@ -914,7 +914,7 @@ class Qubes(qubes.PropertyHolder):
                                              qubes.config.system_path[
                                                  'qubes_store_filename']))
 
-        super(Qubes, self).__init__(xml=None, **kwargs)
+        super().__init__(xml=None, **kwargs)
 
         self.__load_timestamp = None
         self.__locked_fh = None
@@ -981,6 +981,16 @@ class Qubes(qubes.PropertyHolder):
                 pass
             node_default_fw_netvm.getparent().remove(node_default_fw_netvm)
 
+    def _migrate_labels(self):
+        """Migrate changed labels"""
+        if self.xml is None:
+            return
+
+        # fix grey being green
+        grey_label = self.xml.find('./labels/label[@color=\'0x555753\']')
+        if grey_label is not None:
+            grey_label.set('color', '0x555555')
+
     def load(self, lock=False):
         """Open qubes.xml
 
@@ -991,6 +1001,8 @@ class Qubes(qubes.PropertyHolder):
 
         fh = self._acquire_lock()
         self.xml = lxml.etree.parse(fh)
+
+        self._migrate_labels()
 
         # stage 1: load labels and pools
         for node in self.xml.xpath('./labels/label'):
@@ -1211,7 +1223,7 @@ class Qubes(qubes.PropertyHolder):
             2: qubes.Label(2, '0xf57900', 'orange'),
             3: qubes.Label(3, '0xedd400', 'yellow'),
             4: qubes.Label(4, '0x73d216', 'green'),
-            5: qubes.Label(5, '0x555753', 'gray'),
+            5: qubes.Label(5, '0x555555', 'gray'),
             6: qubes.Label(6, '0x3465a4', 'blue'),
             7: qubes.Label(7, '0x75507b', 'purple'),
             8: qubes.Label(8, '0x000000', 'black'),
@@ -1328,7 +1340,7 @@ class Qubes(qubes.PropertyHolder):
         except (KeyError, ValueError):
             pass
 
-        raise KeyError(label)
+        raise qubes.exc.QubesLabelNotFoundError(label)
 
     @asyncio.coroutine
     def setup_pools(self):
@@ -1546,3 +1558,15 @@ class Qubes(qubes.PropertyHolder):
                 # netvm to it's default value
                 vm.fire_event('property-reset:netvm',
                               name='netvm', oldvalue=oldvalue)
+
+    @qubes.events.handler('property-set:default_dispvm')
+    def on_property_set_default_dispvm(self, event, name, newvalue,
+                                      oldvalue=None):
+        # pylint: disable=unused-argument
+        for vm in self.domains:
+            if hasattr(vm, 'default_dispvm') and \
+                    vm.property_is_default('default_dispvm'):
+                # fire property-reset:default_dispvm as it is responsible for
+                # resetting dispvm to it's default value
+                vm.fire_event('property-reset:default_dispvm',
+                              name='default_dispvm', oldvalue=oldvalue)

@@ -55,6 +55,9 @@ class TestVMsCollection(dict):
     def close(self):
         self.clear()
 
+    def __iter__(self):
+        return iter(set(self.values()))
+
 class TestVolume(object):
     def __init__(self, pool):
         self.pool = pool
@@ -79,7 +82,7 @@ class TestApp(qubes.tests.TestEmitter):
         for l in self.labels.values():
             if l.name == label:
                 return l
-        raise KeyError(label)
+        raise qubes.exc.QubesLabelNotFoundError(label)
 
     def get_pool(self, pool):
         return self.pools[pool]

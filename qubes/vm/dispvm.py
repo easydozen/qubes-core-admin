@@ -26,12 +26,18 @@ import qubes.vm.qubesvm
 import qubes.vm.appvm
 import qubes.config
 
+def _setter_template(self, prop, value):
+    if not getattr(value, 'template_for_dispvms', False):
+        raise qubes.exc.QubesPropertyValueError(self, prop, value,
+            'template for DispVM must have template_for_dispvms=True')
+    return value
+
 class DispVM(qubes.vm.qubesvm.QubesVM):
     '''Disposable VM'''
 
     template = qubes.VMProperty('template',
                                 load_stage=4,
-                                vmclass=qubes.vm.appvm.AppVM,
+                                setter=_setter_template,
                                 doc='AppVM, on which this DispVM is based.')
 
     dispid = qubes.property('dispid', type=int, write_once=True,
@@ -116,7 +122,7 @@ class DispVM(qubes.vm.qubesvm.QubesVM):
                         and 'pool' in config:
                     self.volume_config[name]['pool'] = config['pool']
 
-        super(DispVM, self).__init__(app, xml, *args, **kwargs)
+        super().__init__(app, xml, *args, **kwargs)
 
         if xml is None:
             # by default inherit properties from the DispVM template
@@ -223,7 +229,7 @@ class DispVM(qubes.vm.qubesvm.QubesVM):
                     'template for DispVM ({}) needs to have '
                     'template_for_dispvms=True'.format(self.template.name))
 
-            yield from super(DispVM, self).start(**kwargs)
+            yield from super().start(**kwargs)
         except:
             # Cleanup also on failed startup
             yield from self._auto_cleanup()

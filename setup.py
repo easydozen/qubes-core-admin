@@ -61,6 +61,8 @@ if __name__ == '__main__':
             ],
             'qubes.ext': [
                 'qubes.ext.admin = qubes.ext.admin:AdminExtension',
+                'qubes.ext.backup_restore = '
+                'qubes.ext.backup_restore:BackupRestoreExtension',
                 'qubes.ext.core_features = qubes.ext.core_features:CoreFeatures',
                 'qubes.ext.gui = qubes.ext.gui:GUI',
                 'qubes.ext.audio = qubes.ext.audio:AUDIO',
@@ -68,6 +70,7 @@ if __name__ == '__main__':
                 'qubes.ext.pci = qubes.ext.pci:PCIDeviceExtension',
                 'qubes.ext.block = qubes.ext.block:BlockDeviceExtension',
                 'qubes.ext.services = qubes.ext.services:ServicesExtension',
+                'qubes.ext.supported_features = qubes.ext.supported_features:SupportedFeaturesExtension',
                 'qubes.ext.windows = qubes.ext.windows:WindowsFeatures',
             ],
             'qubes.devices': [
