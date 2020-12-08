@@ -1,13 +1,29 @@
-#!/bin/sh
+#!/bin/bash --
 
+set -eu
+unset CLEANUP_LVM name DEFAULT_LVM_POOL retcode
+install_rpm_deps () {
+    local applications
+    applications=(lvm2 python3-docutils python3-pyyaml python3-jinja2
+        python3-lxml btrfs-progs vim-common)
+    rpm -q --quiet -- "${applications[@]}" ||
+    sudo dnf -- install "${applications[@]}" ||
+    : # we don’t actually care if this succeeds
+}
+if { command -pv rpm && command -pv dnf; }>/dev/null; then install_rpm_deps; fi
 CLEANUP_LVM=
-if sudo --non-interactive $(dirname "$0")/ci/lvm-manage setup-lvm vg$$/pool; then
+name=$(dirname "$0")
+if sudo --non-interactive "$name/ci/lvm-manage" setup-lvm vg$$/pool; then
     export DEFAULT_LVM_POOL=vg$$/pool
     CLEANUP_LVM=yes
 fi
 
 : "${PYTHON:=python3}"
 : "${TESTPYTHONPATH:=test-packages}"
+
+if [ -d ../core-qrexec/qrexec ] && ! $PYTHON -c 'import qrexec' 2>/dev/null; then
+    PYTHONPATH="${PYTHONPATH-}:../core-qrexec"
+fi
 
 PYTHONPATH="${TESTPYTHONPATH}:${PYTHONPATH}"
 export PYTHONPATH

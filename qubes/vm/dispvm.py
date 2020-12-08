@@ -21,6 +21,7 @@
 ''' A disposable vm implementation '''
 
 import asyncio
+import copy
 
 import qubes.vm.qubesvm
 import qubes.vm.appvm
@@ -57,38 +58,39 @@ class DispVM(qubes.vm.qubesvm.QubesVM):
         default=(lambda self: self.template),
         doc='Default VM to be used as Disposable VM for service calls.')
 
-    def __init__(self, app, xml, *args, **kwargs):
-        self.volume_config = {
-            'root': {
-                'name': 'root',
-                'snap_on_start': True,
-                'save_on_stop': False,
-                'rw': True,
-                'source': None,
-            },
-            'private': {
-                'name': 'private',
-                'snap_on_start': True,
-                'save_on_stop': False,
-                'rw': True,
-                'source': None,
-            },
-            'volatile': {
-                'name': 'volatile',
-                'snap_on_start': False,
-                'save_on_stop': False,
-                'rw': True,
-                'size': qubes.config.defaults['root_img_size'] +
-                        qubes.config.defaults['private_img_size'],
-            },
-            'kernel': {
-                'name': 'kernel',
-                'snap_on_start': False,
-                'save_on_stop': False,
-                'rw': False,
-            }
-        }
+    default_volume_config = {
+        'root': {
+            'name': 'root',
+            'snap_on_start': True,
+            'save_on_stop': False,
+            'rw': True,
+            'source': None,
+        },
+        'private': {
+            'name': 'private',
+            'snap_on_start': True,
+            'save_on_stop': False,
+            'rw': True,
+            'source': None,
+        },
+        'volatile': {
+            'name': 'volatile',
+            'snap_on_start': False,
+            'save_on_stop': False,
+            'rw': True,
+            'size': qubes.config.defaults['root_img_size'] +
+                    qubes.config.defaults['private_img_size'],
+        },
+        'kernel': {
+            'name': 'kernel',
+            'snap_on_start': False,
+            'save_on_stop': False,
+            'rw': False,
+        },
+    }
 
+    def __init__(self, app, xml, *args, **kwargs):
+        self.volume_config = copy.deepcopy(self.default_volume_config)
         template = kwargs.get('template', None)
 
         if xml is None:
@@ -145,14 +147,27 @@ class DispVM(qubes.vm.qubesvm.QubesVM):
         '''  # pylint: disable=unused-argument
         assert self.template
 
-    @qubes.events.handler('property-pre-set:template',
-        'property-pre-reset:template')
-    def on_property_pre_set_template(self, event, name, newvalue=None,
+    @qubes.events.handler('property-pre-reset:template')
+    def on_property_pre_reset_template(self, event, name, oldvalue=None):
+        '''Forbid deleting template of VM
+        '''  # pylint: disable=unused-argument,no-self-use
+        raise qubes.exc.QubesValueError('Cannot unset template')
+
+    @qubes.events.handler('property-pre-set:template')
+    def on_property_pre_set_template(self, event, name, newvalue,
             oldvalue=None):
-        ''' Disposable VM cannot have template changed '''
-        # pylint: disable=unused-argument
-        raise qubes.exc.QubesValueError(self,
-            'Cannot change template of Disposable VM')
+        '''Forbid changing template of running VM
+        '''  # pylint: disable=unused-argument
+        if not self.is_halted():
+            raise qubes.exc.QubesVMNotHaltedError(self,
+                'Cannot change template while qube is running')
+
+    @qubes.events.handler('property-set:template')
+    def on_property_set_template(self, event, name, newvalue, oldvalue=None):
+        ''' Adjust root (and possibly other snap_on_start=True) volume
+        on template change.
+        '''  # pylint: disable=unused-argument
+        qubes.vm.appvm.template_changed_update_storage(self)
 
     @qubes.events.handler('domain-shutdown')
     @asyncio.coroutine
