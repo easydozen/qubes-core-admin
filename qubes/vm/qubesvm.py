@@ -1418,8 +1418,7 @@ class QubesVM(qubes.vm.mix.net.NetVMMixin, qubes.vm.BaseVM):
 
         return self
 
-    @asyncio.coroutine
-    def run_service(self, service, source=None, user=None, stubdom=False,
+    async def run_service(self, service, source=None, user=None, stubdom=False
                     filter_esc=False, autostart=False, gui=False, **kwargs):
         """Run service on this VM
 
